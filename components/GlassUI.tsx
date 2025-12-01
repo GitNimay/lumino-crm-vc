@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../lib/utils';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -13,14 +14,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', 
   return (
     <div
       onClick={onClick}
-      className={`
-        bg-white dark:bg-gray-900 
-        border border-gray-200 dark:border-gray-800 
-        rounded-lg
-        ${hoverEffect ? 'hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm cursor-pointer transition-colors duration-200' : 'shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]'}
-        ${noPadding ? '' : ''}
-        ${className}
-      `}
+      className={cn(
+        "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg",
+        hoverEffect ? 'hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm cursor-pointer transition-colors duration-200' : 'shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]',
+        noPadding ? '' : 'p-6',
+        className
+      )}
     >
       {children}
     </div>
@@ -33,16 +32,16 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  className = '', 
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
   isLoading,
-  ...props 
+  ...props
 }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
-  
+
   const variants = {
     primary: "bg-gray-900 hover:bg-gray-800 text-white border border-transparent focus:ring-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200",
     secondary: "bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm focus:ring-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700",
@@ -59,8 +58,8 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+    <button
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
       {...props}
     >
       {isLoading ? (
@@ -79,14 +78,10 @@ export const Button: React.FC<ButtonProps> = ({
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
   <input
     {...props}
-    className={`
-      w-full bg-white dark:bg-gray-900 
-      border border-gray-200 dark:border-gray-700 
-      rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 
-      focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100
-      transition-all duration-200
-      ${props.className || ''}
-    `}
+    className={cn(
+      "w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-100 focus:border-gray-900 dark:focus:border-gray-100 transition-all duration-200",
+      props.className
+    )}
   />
 );
 
@@ -100,7 +95,7 @@ export const Badge: React.FC<{ children: React.ReactNode; color?: 'indigo' | 'gr
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${colors[color]}`}>
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border", colors[color])}>
       {children}
     </span>
   );
@@ -118,8 +113,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-[2px] transition-opacity" 
+      <div
+        className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-[2px] transition-opacity"
         onClick={onClose}
       />
       <div className="relative w-full max-w-lg transform transition-all">

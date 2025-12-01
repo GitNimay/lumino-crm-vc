@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, 
-  KanbanSquare, 
-  Users, 
-  CreditCard, 
-  Settings, 
-  Search, 
+import {
+  LayoutDashboard,
+  KanbanSquare,
+  Users,
+  CreditCard,
+  Settings,
+  Search,
   Bell,
   Menu,
   Moon,
@@ -55,8 +55,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F9FAFB] dark:bg-gray-950">
-      
+    <div className="flex h-[100dvh] overflow-hidden bg-[#F9FAFB] dark:bg-gray-950">
+
       {/* Sidebar */}
       <aside className={`
         fixed lg:relative z-20 w-64 h-full 
@@ -79,8 +79,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
               }}
               className={`
                 w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200
-                ${activePage === item.id 
-                  ? 'bg-gray-200/60 dark:bg-gray-800 text-gray-900 dark:text-white' 
+                ${activePage === item.id
+                  ? 'bg-gray-200/60 dark:bg-gray-800 text-gray-900 dark:text-white'
                   : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200'}
               `}
             >
@@ -90,7 +90,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
           ))}
 
           <div className="my-2 mx-2 border-t border-gray-200 dark:border-gray-800"></div>
-          
+
           <button
             onClick={() => {
               setIsImportOpen(true);
@@ -106,15 +106,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
         <div className="absolute bottom-4 left-0 w-full px-3">
           <div className="p-3 border-t border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3 mb-3">
-               <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-500">
-                  {user?.email?.charAt(0).toUpperCase()}
-               </div>
-               <div className="flex-1 min-w-0">
-                 <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">My Account</p>
-                 <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-               </div>
+              <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-500">
+                {user?.email?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">My Account</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+              </div>
             </div>
-            <button 
+            <button
               onClick={signOut}
               className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
             >
@@ -128,9 +128,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10 h-full overflow-hidden bg-white dark:bg-gray-950">
         {/* Top Header */}
-        <header className="h-14 flex items-center justify-between px-6 lg:px-8 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+        <header className="h-14 flex items-center justify-between px-6 lg:px-8 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shrink-0">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               className="lg:hidden text-gray-500 dark:text-gray-400"
               onClick={() => setIsMobileMenuOpen(true)}
             >
@@ -144,25 +144,25 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
           </div>
 
           <div className="flex items-center gap-3">
-             {/* Search Bar */}
-             <div className="hidden md:flex items-center relative group">
+            {/* Search Bar */}
+            <div className="hidden md:flex items-center relative group">
               <Search className="absolute left-2.5 text-gray-400 w-3.5 h-3.5" />
-              <input 
-                type="text" 
-                placeholder="Search" 
+              <input
+                type="text"
+                placeholder="Search"
                 className="pl-8 pr-4 py-1.5 w-64 bg-gray-50 dark:bg-gray-900 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 focus:bg-white dark:focus:bg-gray-900 border focus:border-gray-300 dark:focus:border-gray-600 rounded-md text-xs transition-all outline-none"
               />
             </div>
-            
+
             <div className="h-4 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
-            <button 
+            <button
               onClick={toggleTheme}
               className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            
+
             <button className="relative p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
               <Bell size={16} />
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-950"></span>
@@ -171,7 +171,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-[#F9FAFB] dark:bg-gray-950 p-6 lg:p-8 scroll-smooth">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[#F9FAFB] dark:bg-gray-950 p-6 lg:p-8">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>
@@ -180,17 +180,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
 
       {/* Mobile Menu Backdrop */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-10 bg-gray-900/20 backdrop-blur-sm lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Global Import Wizard */}
-      <ImportWizard 
-        isOpen={isImportOpen} 
-        onClose={() => setIsImportOpen(false)} 
-        onComplete={() => setIsImportOpen(false)} 
+      <ImportWizard
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onComplete={() => setIsImportOpen(false)}
       />
     </div>
   );

@@ -7,7 +7,7 @@ import { MoreHorizontal, Plus } from 'lucide-react';
 export const Pipeline: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
-  
+
   const stages = Object.values(PipelineStage);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export const Pipeline: React.FC = () => {
     e.preventDefault();
     if (!draggedLeadId) return;
 
-    const updatedLeads = leads.map(l => 
+    const updatedLeads = leads.map(l =>
       l.id === draggedLeadId ? { ...l, stage } : l
     );
     setLeads(updatedLeads);
@@ -50,13 +50,13 @@ export const Pipeline: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex gap-4 overflow-x-auto pb-2 snap-x">
+    <div className="h-[calc(100dvh-140px)] flex gap-4 overflow-x-auto pb-2 snap-x">
       {stages.map((stage) => {
         const stageLeads = getLeadsByStage(stage);
         const stageValue = calculateStageValue(stageLeads);
-        
+
         return (
-          <div 
+          <div
             key={stage}
             className="flex-shrink-0 w-80 flex flex-col h-full snap-start bg-gray-50/50 dark:bg-gray-900/20 rounded-lg p-2 border border-gray-100 dark:border-gray-800"
             onDragOver={handleDragOver}
@@ -71,10 +71,10 @@ export const Pipeline: React.FC = () => {
                 </span>
               </div>
               <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  <Plus size={16} />
+                <Plus size={16} />
               </button>
             </div>
-            
+
             {/* Drop Zone / List */}
             <div className="flex-1 overflow-y-auto px-1 space-y-2.5 scrollbar-thin">
               {stageLeads.length === 0 && (
@@ -89,8 +89,8 @@ export const Pipeline: React.FC = () => {
                   onDragStart={(e) => handleDragStart(e, lead.id)}
                   className="cursor-move transform transition-all duration-200 hover:-translate-y-0.5"
                 >
-                  <GlassCard 
-                    hoverEffect 
+                  <GlassCard
+                    hoverEffect
                     className="p-3 group relative border border-gray-200 dark:border-gray-800 shadow-sm"
                   >
                     <div className="flex justify-between items-start mb-1.5">
@@ -109,12 +109,12 @@ export const Pipeline: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-1.5">
-                         {lead.avatarUrl ? (
-                             <img src={lead.avatarUrl} className="w-4 h-4 rounded-full grayscale opacity-70" />
-                         ) : (
-                             <div className="w-4 h-4 rounded-full bg-gray-200"></div>
-                         )}
-                         <span className="text-[10px] text-gray-400">{new Date(lead.lastActivity).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
+                        {lead.avatarUrl ? (
+                          <img src={lead.avatarUrl} className="w-4 h-4 rounded-full grayscale opacity-70" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-gray-200"></div>
+                        )}
+                        <span className="text-[10px] text-gray-400">{new Date(lead.lastActivity).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                       </div>
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                         ${lead.value.toLocaleString()}
