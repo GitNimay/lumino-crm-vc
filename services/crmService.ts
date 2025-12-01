@@ -3,7 +3,7 @@ import { Lead, PipelineStage, LeadStatus, DashboardStats, Task, List } from '../
 import Papa from 'papaparse';
 
 class CrmService {
-  
+
   // --- HELPERS ---
   private mapRowToLead(row: any): Lead {
     return {
@@ -41,7 +41,7 @@ class CrmService {
       name: row.name,
       description: row.description,
       createdAt: row.created_at,
-      leadCount: row.lead_count || 0, 
+      leadCount: row.lead_count || 0,
     };
   }
 
@@ -60,7 +60,7 @@ class CrmService {
         .eq('list_id', listId);
 
       if (membershipError) throw membershipError;
-      
+
       const leadIds = membershipData.map((m: any) => m.lead_id);
       query = query.in('id', leadIds);
     }
@@ -125,10 +125,11 @@ class CrmService {
 
     const { data, error } = await supabase
       .from('leads')
-      .update({ 
-        stage: newStage, 
+      .update({
+        stage: newStage,
         status: newStatus,
-        last_activity: new Date().toISOString() 
+        last_activity: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .eq('id', leadId)
       .select()
@@ -149,6 +150,7 @@ class CrmService {
     delete dbUpdates.id;
     delete dbUpdates.createdAt;
     dbUpdates.last_activity = new Date().toISOString();
+    dbUpdates.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
       .from('leads')
@@ -235,14 +237,14 @@ class CrmService {
   async getLists(): Promise<List[]> {
     const { data, error } = await supabase.from('lists').select('*').order('name');
     if (error) return [];
-    
+
     const lists = data.map(this.mapRowToList);
-    
+
     for (const list of lists) {
-       const { count } = await supabase.from('list_memberships').select('*', { count: 'exact', head: true }).eq('list_id', list.id);
-       list.leadCount = count || 0;
+      const { count } = await supabase.from('list_memberships').select('*', { count: 'exact', head: true }).eq('list_id', list.id);
+      list.leadCount = count || 0;
     }
-    
+
     return lists;
   }
 
@@ -314,7 +316,7 @@ class CrmService {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `leads_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `leads_export_${new Date().toISOString().slice(0, 10)}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -349,8 +351,8 @@ class CrmService {
     const lastYear = lastMonthDate.getFullYear();
 
     const isMonth = (dateStr: string, month: number, year: number) => {
-        const d = new Date(dateStr);
-        return d.getMonth() === month && d.getFullYear() === year;
+      const d = new Date(dateStr);
+      return d.getMonth() === month && d.getFullYear() === year;
     };
 
     const activeLeads = leads.filter(l => l.status === LeadStatus.ACTIVE);
@@ -376,13 +378,13 @@ class CrmService {
     const closedLastMonth = leads.filter(l => (l.stage === PipelineStage.WON || l.stage === PipelineStage.LOST) && isMonth(l.updated_at, lastMonth, lastYear));
     const wonLastMonthCount = closedLastMonth.filter(l => l.stage === PipelineStage.WON).length;
     const rateLastMonth = closedLastMonth.length > 0 ? (wonLastMonthCount / closedLastMonth.length) * 100 : 0;
-    
+
     const conversionTrend = rateThisMonth - rateLastMonth;
 
     const dealStages = [PipelineStage.QUALIFIED, PipelineStage.PROPOSAL, PipelineStage.CONTACTED];
     const activeDealsList = leads.filter(l => dealStages.includes(l.stage as PipelineStage) && l.status === LeadStatus.ACTIVE);
     const activeDeals = activeDealsList.length;
-    const dealsTrend = leadsTrend; 
+    const dealsTrend = leadsTrend;
 
     return {
       totalLeads,
