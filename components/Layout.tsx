@@ -9,9 +9,13 @@ import {
   Bell,
   Menu,
   Moon,
-  Sun
+  Sun,
+  LogOut,
+  CheckSquare,
+  Upload
 } from 'lucide-react';
-import { GlassCard } from './GlassUI';
+import { useAuth } from '../contexts/AuthContext';
+import { ImportWizard } from './ImportWizard';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +26,8 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     if (document.documentElement.classList.contains('dark')) {
@@ -41,6 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'pipeline', label: 'Pipeline', icon: KanbanSquare },
     { id: 'lists', label: 'Lists', icon: Users },
     { id: 'billing', label: 'Billing', icon: CreditCard },
@@ -81,17 +88,39 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
               {item.label}
             </button>
           ))}
+
+          <div className="my-2 mx-2 border-t border-gray-200 dark:border-gray-800"></div>
+          
+          <button
+            onClick={() => {
+              setIsImportOpen(true);
+              setIsMobileMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200 transition-colors duration-200"
+          >
+            <Upload size={16} strokeWidth={2} className="text-gray-400 dark:text-gray-500" />
+            Import CSV
+          </button>
         </nav>
 
         <div className="absolute bottom-4 left-0 w-full px-3">
-          <div className="p-2 flex items-center gap-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-            <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
-               <img src="https://picsum.photos/40/40" alt="Profile" className="w-full h-full object-cover" />
+          <div className="p-3 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-3 mb-3">
+               <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-500">
+                  {user?.email?.charAt(0).toUpperCase()}
+               </div>
+               <div className="flex-1 min-w-0">
+                 <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">My Account</p>
+                 <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">John Doe</p>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">Workspace Admin</p>
-            </div>
+            <button 
+              onClick={signOut}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+            >
+              <LogOut size={14} />
+              Sign out
+            </button>
           </div>
         </div>
       </aside>
@@ -156,6 +185,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
+
+      {/* Global Import Wizard */}
+      <ImportWizard 
+        isOpen={isImportOpen} 
+        onClose={() => setIsImportOpen(false)} 
+        onComplete={() => setIsImportOpen(false)} 
+      />
     </div>
   );
 };

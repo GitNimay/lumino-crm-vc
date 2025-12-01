@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -12,18 +12,18 @@ import {
 } from 'recharts';
 import { GlassCard, Badge, Button } from '../components/GlassUI';
 import { crmService } from '../services/crmService';
-import { DashboardStats, Lead } from '../types';
-import { ArrowUpRight, ArrowDownRight, Users, DollarSign, Activity, TrendingUp, Calendar } from 'lucide-react';
+import { DashboardStats, Lead, PipelineStage, LeadStatus } from '../types';
+import { ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
 
-const KPICard = ({ title, value, trend, subtext }: { title: string, value: string, trend: string, subtext: string }) => (
+const KPICard = ({ title, value, trend, subtext, trendValue }: { title: string, value: string, trend: string, subtext: string, trendValue: number }) => (
   <GlassCard className="p-5 flex flex-col justify-between h-32">
     <div>
       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{title}</p>
       <h3 className="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight">{value}</h3>
     </div>
     <div className="flex items-center gap-2 mt-auto">
-      <span className={`flex items-center text-xs font-medium ${trend.startsWith('+') ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-        {trend.startsWith('+') ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+      <span className={`flex items-center text-xs font-medium ${trendValue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+        {trendValue >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
         {trend}
       </span>
       <span className="text-xs text-gray-400 dark:text-gray-500">{subtext}</span>
@@ -37,7 +37,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-gray-900 text-white text-xs p-2 rounded shadow-xl">
         <p className="font-semibold mb-1">{label}</p>
         <p>
-          {`${payload[0].value}`}
+          {`${payload[0].value.toLocaleString()}`}
         </p>
       </div>
     );
@@ -48,40 +48,68 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
+  const [allLeads, setAllLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data for charts
-  const pipelineData = [
-    { name: 'New', value: 12 },
-    { name: 'Contacted', value: 19 },
-    { name: 'Qualified', value: 8 },
-    { name: 'Proposal', value: 5 },
-    { name: 'Won', value: 3 },
-  ];
+  const fetchData = async () => {
+    // Fetch detailed stats including trends
+    const statsData = await crmService.getDashboardStats();
+    setStats(statsData);
 
-  const revenueData = [
-    { name: 'Jan', uv: 4000 },
-    { name: 'Feb', uv: 3000 },
-    { name: 'Mar', uv: 2000 },
-    { name: 'Apr', uv: 2780 },
-    { name: 'May', uv: 1890 },
-    { name: 'Jun', uv: 2390 },
-    { name: 'Jul', uv: 3490 },
-  ];
+    // Fetch leads for lists and charts
+    const leadsData = await crmService.getLeads();
+    setAllLeads(leadsData);
+    setRecentLeads(leadsData.slice(0, 5));
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [statsData, leadsData] = await Promise.all([
-        crmService.getDashboardStats(),
-        crmService.getLeads()
-      ]);
-      setStats(statsData);
-      setRecentLeads(leadsData.slice(0, 5));
-      setLoading(false);
-    };
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Subscribe to real-time changes
+    const channel = crmService.subscribeToLeads(() => {
+      fetchData();
+    });
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, []);
+
+  // Compute Revenue Trend (Last 6 months)
+  const revenueData = useMemo(() => {
+    const months = 6;
+    const data = [];
+    const today = new Date();
+    
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthName = d.toLocaleString('default', { month: 'short' });
+      const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
+      
+      const value = allLeads
+        .filter(l => {
+          const leadDate = new Date(l.createdAt);
+          const leadMonthKey = `${leadDate.getFullYear()}-${leadDate.getMonth()}`;
+          // Sum value of active leads created in this month
+          return leadMonthKey === monthKey && l.stage !== PipelineStage.LOST;
+        })
+        .reduce((sum, l) => sum + l.value, 0);
+
+      data.push({ name: monthName, uv: value });
+    }
+    return data;
+  }, [allLeads]);
+
+  // Compute Pipeline Volume by Stage
+  const pipelineData = useMemo(() => {
+    const stages = Object.values(PipelineStage);
+    return stages.map(stage => ({
+      name: stage,
+      value: allLeads.filter(l => l.stage === stage).length
+    }));
+  }, [allLeads]);
 
   if (loading) {
     return (
@@ -92,6 +120,9 @@ export const Dashboard: React.FC = () => {
       </div>
     );
   }
+
+  // Helper to format percentage trend
+  const fmtTrend = (val: number) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`;
 
   return (
     <div className="space-y-6">
@@ -104,7 +135,7 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="flex gap-2">
             <Button variant="secondary" size="sm" className="gap-2">
-                <Calendar size={14} /> Last 30 Days
+                <Calendar size={14} /> Last 6 Months
             </Button>
             <Button variant="primary" size="sm">Download Report</Button>
         </div>
@@ -113,27 +144,31 @@ export const Dashboard: React.FC = () => {
       {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard 
-          title="Total Revenue" 
+          title="Total Pipeline" 
           value={`$${stats?.pipelineValue.toLocaleString()}`} 
-          trend="+12.5%" 
+          trend={fmtTrend(stats?.pipelineTrend || 0)}
+          trendValue={stats?.pipelineTrend || 0}
           subtext="vs last month"
         />
         <KPICard 
           title="Active Leads" 
           value={stats?.totalLeads.toString() || '0'} 
-          trend="+5.2%" 
+          trend={fmtTrend(stats?.leadsTrend || 0)}
+          trendValue={stats?.leadsTrend || 0}
           subtext="new leads added"
         />
         <KPICard 
           title="Conversion Rate" 
           value={`${stats?.conversionRate.toFixed(1)}%`} 
-          trend="-2.1%" 
+          trend={fmtTrend(stats?.conversionTrend || 0)}
+          trendValue={stats?.conversionTrend || 0}
           subtext="avg. this quarter"
         />
         <KPICard 
           title="Active Deals" 
           value={stats?.activeDeals.toString() || '0'} 
-          trend="+8%" 
+          trend={fmtTrend(stats?.dealsTrend || 0)}
+          trendValue={stats?.dealsTrend || 0}
           subtext="in pipeline"
         />
       </div>
@@ -142,7 +177,7 @@ export const Dashboard: React.FC = () => {
         {/* Revenue Chart */}
         <GlassCard className="lg:col-span-2 p-6 flex flex-col h-[360px]">
           <div className="flex justify-between items-center mb-6">
-             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Revenue Trend</h3>
+             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Pipeline Value Trend</h3>
           </div>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -204,28 +239,34 @@ export const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {recentLeads.map((lead) => (
-                <tr key={lead.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <td className="py-3 px-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-600 dark:text-gray-300">
-                            {lead.name.charAt(0)}
-                        </div>
-                        <span className="font-medium text-sm text-gray-900 dark:text-white">{lead.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-6 text-sm text-gray-500 dark:text-gray-400">{lead.company}</td>
-                  <td className="py-3 px-6 text-sm text-gray-900 dark:text-gray-200 font-medium">${lead.value.toLocaleString()}</td>
-                  <td className="py-3 px-6">
-                    <span className="text-xs font-medium text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700">
-                      {lead.stage}
-                    </span>
-                  </td>
-                  <td className="py-3 px-6">
-                    <Badge color={lead.status === 'Active' ? 'green' : 'gray'}>{lead.status}</Badge>
-                  </td>
-                </tr>
-              ))}
+              {recentLeads.length === 0 ? (
+                 <tr>
+                    <td colSpan={5} className="py-6 text-center text-sm text-gray-500">No leads found. Create one to get started.</td>
+                 </tr>
+              ) : (
+                recentLeads.map((lead) => (
+                  <tr key={lead.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <td className="py-3 px-6">
+                      <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-600 dark:text-gray-300">
+                              {lead.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-sm text-gray-900 dark:text-white">{lead.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-6 text-sm text-gray-500 dark:text-gray-400">{lead.company}</td>
+                    <td className="py-3 px-6 text-sm text-gray-900 dark:text-gray-200 font-medium">${lead.value.toLocaleString()}</td>
+                    <td className="py-3 px-6">
+                      <span className="text-xs font-medium text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700">
+                        {lead.stage}
+                      </span>
+                    </td>
+                    <td className="py-3 px-6">
+                      <Badge color={lead.status === 'Active' ? 'green' : 'gray'}>{lead.status}</Badge>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
