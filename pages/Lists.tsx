@@ -10,11 +10,11 @@ export const Lists: React.FC = () => {
   // View State
   const [activeList, setActiveList] = useState<List | null>(null); // null = All Leads
   const [savedLists, setSavedLists] = useState<List[]>([]);
-  
+
   // Data State
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
-  
+
   // UI State
   const [searchTerm, setSearchTerm] = useState('');
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
@@ -22,6 +22,12 @@ export const Lists: React.FC = () => {
   const [isCreateListOpen, setIsCreateListOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [viewingLead, setViewingLead] = useState<Lead | null>(null);
+
+  // New Lead Form State
+  const [newLeadName, setNewLeadName] = useState('');
+  const [newLeadCompany, setNewLeadCompany] = useState('');
+  const [newLeadValue, setNewLeadValue] = useState('');
+  const [newLeadTags, setNewLeadTags] = useState('');
 
   useEffect(() => {
     loadLists();
@@ -72,98 +78,98 @@ export const Lists: React.FC = () => {
   const handleDeleteLeads = async () => {
     if (selectedLeadIds.size === 0) return;
     if (confirm(`Are you sure you want to delete ${selectedLeadIds.size} leads? This cannot be undone.`)) {
-       for (const id of selectedLeadIds) {
-          await crmService.deleteLead(id);
-       }
-       loadLeads();
-       loadLists(); // counts update
+      for (const id of selectedLeadIds) {
+        await crmService.deleteLead(id);
+      }
+      loadLeads();
+      loadLists(); // counts update
     }
   };
 
   const handleExport = () => {
-    const leadsToExport = selectedLeadIds.size > 0 
+    const leadsToExport = selectedLeadIds.size > 0
       ? leads.filter(l => selectedLeadIds.has(l.id))
       : leads;
     crmService.exportLeads(leadsToExport);
   };
 
-  const filteredLeads = leads.filter(l => 
-    l.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredLeads = leads.filter(l =>
+    l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     l.company.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-140px)]">
-      
+
       {/* Sidebar (Lists) */}
       <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-2">
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">My Lists</h3>
-        
-        <button 
+
+        <button
           onClick={() => setActiveList(null)}
           className={`text-left px-3 py-2 rounded-md text-sm font-medium flex justify-between items-center ${!activeList ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
         >
-          All Leads <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 rounded-full">{savedLists.reduce((acc,l)=>acc+(l.leadCount||0),0)}</span> 
+          All Leads <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 rounded-full">{savedLists.reduce((acc, l) => acc + (l.leadCount || 0), 0)}</span>
           {/* Note: Total count above is approx for v1 demo */}
         </button>
 
         {savedLists.map(list => (
-           <button 
-             key={list.id}
-             onClick={() => setActiveList(list)}
-             className={`text-left px-3 py-2 rounded-md text-sm font-medium flex justify-between items-center ${activeList?.id === list.id ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
-           >
-             <span className="truncate">{list.name}</span>
-             <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 rounded-full">{list.leadCount}</span>
-           </button>
+          <button
+            key={list.id}
+            onClick={() => setActiveList(list)}
+            className={`text-left px-3 py-2 rounded-md text-sm font-medium flex justify-between items-center ${activeList?.id === list.id ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+          >
+            <span className="truncate">{list.name}</span>
+            <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 rounded-full">{list.leadCount}</span>
+          </button>
         ))}
 
         <Button variant="outline" size="sm" className="mt-2 justify-start gap-2" onClick={() => setIsCreateListOpen(true)}>
-           <Plus size={14} /> New List
+          <Plus size={14} /> New List
         </Button>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm">
-        
+
         {/* Header / Toolbar */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between gap-4 items-center">
-           <div className="flex items-center gap-4 w-full md:w-auto">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                {activeList ? activeList.name : 'All Leads'}
-              </h2>
-              <div className="relative w-full md:w-64">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
-                <Input 
-                  placeholder="Search..." 
-                  className="pl-8 h-8 text-xs"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-           </div>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+              {activeList ? activeList.name : 'All Leads'}
+            </h2>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+              <Input
+                placeholder="Search..."
+                className="pl-8 h-8 text-xs"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
 
-           <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
-             {selectedLeadIds.size > 0 && (
-               <>
-                 <Button size="sm" variant="danger" onClick={handleDeleteLeads} className="gap-2">
-                   <Trash2 size={14} /> Delete ({selectedLeadIds.size})
-                 </Button>
-                 <Button size="sm" variant="outline" onClick={() => setIsCreateListOpen(true)} className="gap-2 whitespace-nowrap">
-                   <ListIcon size={14} /> Add to List
-                 </Button>
-               </>
-             )}
-             <Button size="sm" variant="outline" onClick={handleExport} className="gap-2">
-               <Download size={14} /> Export
-             </Button>
-             <Button size="sm" variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
-               <Upload size={14} /> Import
-             </Button>
-             <Button size="sm" onClick={() => { setViewingLead(null); setIsLeadModalOpen(true); }} className="gap-2 whitespace-nowrap">
-               <Plus size={14} /> Add Lead
-             </Button>
-           </div>
+          <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
+            {selectedLeadIds.size > 0 && (
+              <>
+                <Button size="sm" variant="danger" onClick={handleDeleteLeads} className="gap-2">
+                  <Trash2 size={14} /> Delete ({selectedLeadIds.size})
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsCreateListOpen(true)} className="gap-2 whitespace-nowrap">
+                  <ListIcon size={14} /> Add to List
+                </Button>
+              </>
+            )}
+            <Button size="sm" variant="outline" onClick={handleExport} className="gap-2">
+              <Download size={14} /> Export
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
+              <Upload size={14} /> Import
+            </Button>
+            <Button size="sm" onClick={() => { setViewingLead(null); setIsLeadModalOpen(true); }} className="gap-2 whitespace-nowrap">
+              <Plus size={14} /> Add Lead
+            </Button>
+          </div>
         </div>
 
         {/* Table */}
@@ -184,21 +190,21 @@ export const Lists: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {filteredLeads.map((lead) => (
-                <tr 
-                   key={lead.id} 
-                   className={`group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                   onClick={(e) => {
-                      // Don't trigger if checkbox clicked
-                      if ((e.target as HTMLElement).tagName !== 'INPUT') {
-                         setViewingLead(lead);
-                         setIsLeadModalOpen(true);
-                      }
-                   }}
+                <tr
+                  key={lead.id}
+                  className={`group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                  onClick={(e) => {
+                    // Don't trigger if checkbox clicked
+                    if ((e.target as HTMLElement).tagName !== 'INPUT') {
+                      setViewingLead(lead);
+                      setIsLeadModalOpen(true);
+                    }
+                  }}
                 >
                   <td className="p-4">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedLeadIds.has(lead.id)} 
+                    <input
+                      type="checkbox"
+                      checked={selectedLeadIds.has(lead.id)}
                       onChange={() => handleToggleSelect(lead.id)}
                       className="rounded border-gray-300 dark:border-gray-700"
                     />
@@ -222,18 +228,18 @@ export const Lists: React.FC = () => {
             </tbody>
           </table>
           {filteredLeads.length === 0 && (
-             <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                <Search size={32} className="mb-4 opacity-50" />
-                <p>No leads found.</p>
-             </div>
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <Search size={32} className="mb-4 opacity-50" />
+              <p>No leads found.</p>
+            </div>
           )}
         </div>
       </div>
 
       {/* Modals */}
-      <ImportWizard 
-        isOpen={isImportOpen} 
-        onClose={() => setIsImportOpen(false)} 
+      <ImportWizard
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
         onComplete={() => { loadLeads(); loadLists(); }}
         targetListId={activeList?.id}
       />
@@ -248,38 +254,59 @@ export const Lists: React.FC = () => {
 
       {/* Create Lead Modal (Quick Add) */}
       <Modal isOpen={isLeadModalOpen && !viewingLead} onClose={() => setIsLeadModalOpen(false)} title="New Lead">
-         {/* Simplified Create Form used if not viewing detail - reused concept from previous, simplified for brevity here */}
-         <div className="space-y-4">
-             <Input placeholder="Full Name" id="new-name" />
-             <Input placeholder="Company" id="new-company" />
-             <div className="flex justify-end gap-2 pt-4">
-                <Button variant="ghost" onClick={() => setIsLeadModalOpen(false)}>Cancel</Button>
-                <Button onClick={async () => {
-                   const name = (document.getElementById('new-name') as HTMLInputElement).value;
-                   const company = (document.getElementById('new-company') as HTMLInputElement).value;
-                   if(name) {
-                     await crmService.createLead({ name, company });
-                     loadLeads();
-                     setIsLeadModalOpen(false);
-                   }
-                }}>Create</Button>
-             </div>
-         </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">Full Name</label>
+            <Input placeholder="e.g. Jane Doe" value={newLeadName} onChange={e => setNewLeadName(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">Company</label>
+            <Input placeholder="e.g. Acme Corp" value={newLeadCompany} onChange={e => setNewLeadCompany(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">Value ($)</label>
+            <Input placeholder="0.00" type="number" value={newLeadValue} onChange={e => setNewLeadValue(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">Tags</label>
+            <Input placeholder="Comma separated (e.g. vip, urgent)" value={newLeadTags} onChange={e => setNewLeadTags(e.target.value)} />
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="ghost" onClick={() => setIsLeadModalOpen(false)}>Cancel</Button>
+            <Button onClick={async () => {
+              if (newLeadName) {
+                await crmService.createLead({
+                  name: newLeadName,
+                  company: newLeadCompany,
+                  value: newLeadValue ? Number(newLeadValue) : 0,
+                  tags: newLeadTags.split(',').map(t => t.trim()).filter(Boolean)
+                });
+                loadLeads();
+                setIsLeadModalOpen(false);
+                // Reset form
+                setNewLeadName('');
+                setNewLeadCompany('');
+                setNewLeadValue('');
+                setNewLeadTags('');
+              }
+            }}>Create Lead</Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Create List Modal */}
       <Modal isOpen={isCreateListOpen} onClose={() => setIsCreateListOpen(false)} title="Create List">
         <div className="space-y-4">
-           <Input 
-             placeholder="List Name (e.g. Q4 Outreach)" 
-             value={newListName} 
-             onChange={e => setNewListName(e.target.value)} 
-             autoFocus
-           />
-           <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setIsCreateListOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreateList}>Save List</Button>
-           </div>
+          <Input
+            placeholder="List Name (e.g. Q4 Outreach)"
+            value={newListName}
+            onChange={e => setNewListName(e.target.value)}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setIsCreateListOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateList}>Save List</Button>
+          </div>
         </div>
       </Modal>
 

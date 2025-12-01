@@ -8,6 +8,7 @@ import { Billing } from './pages/Billing';
 import { Settings } from './pages/Settings';
 import { Auth } from './pages/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 const AuthenticatedApp: React.FC = () => {
   const { session, loading } = useAuth();
@@ -65,7 +66,9 @@ const AuthenticatedApp: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+      <NotificationProvider>
+        <AuthenticatedApp />
+      </NotificationProvider>
     </AuthProvider>
   );
 };
