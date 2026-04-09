@@ -11,7 +11,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 
 const AuthenticatedApp: React.FC = () => {
-  const { session, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const AuthenticatedApp: React.FC = () => {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return <Auth />;
   }
 

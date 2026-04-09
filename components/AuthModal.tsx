@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../lib/supabase';
+import { stackClientApp } from '../lib/stack';
 import { Button, Input, GlassCard } from './GlassUI';
 import { Loader2, X, Shield, Zap } from 'lucide-react';
 
@@ -32,19 +32,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultIs
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        await stackClientApp.signInWithCredential({
           email,
           password,
         });
-        if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        await stackClientApp.signUp({
           email,
           password,
         });
-        if (error) throw error;
       }
-      onClose(); // Close modal on success
+      onClose();
     } catch (err: any) {
       setError(err.message);
     } finally {
