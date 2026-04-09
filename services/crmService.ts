@@ -4,7 +4,6 @@ import Papa from 'papaparse';
 
 class CrmService {
 
-  // --- HELPERS ---
   private mapRowToLead(row: any): Lead {
     return {
       id: row.id,
@@ -45,6 +44,11 @@ class CrmService {
     };
   }
 
+  async getUserId(): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || '';
+  }
+
   // --- LEADS ---
 
   async getLeads(listId?: string): Promise<Lead[]> {
@@ -76,10 +80,9 @@ class CrmService {
   }
 
   async createLead(leadData: Partial<Lead>): Promise<Lead | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const userId = await this.getUserId();
+    if (!userId) throw new Error('User not authenticated');
 
-    // Handle potential string values from CSV import (e.g., "$1,000")
     let cleanValue = 0;
     if (leadData.value !== undefined) {
       if (typeof leadData.value === 'string') {
@@ -91,7 +94,7 @@ class CrmService {
     }
 
     const newLead = {
-      user_id: user.id,
+      user_id: userId,
       name: leadData.name || 'Unknown Lead',
       company: leadData.company || 'Unknown Company',
       email: leadData.email || '',
@@ -194,11 +197,11 @@ class CrmService {
   }
 
   async createTask(taskData: Partial<Task>): Promise<Task | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const userId = await this.getUserId();
+    if (!userId) throw new Error('User not authenticated');
 
     const newTask = {
-      user_id: user.id,
+      user_id: userId,
       title: taskData.title,
       description: taskData.description,
       priority: taskData.priority || 'Medium',
@@ -249,10 +252,10 @@ class CrmService {
   }
 
   async createList(name: string, description?: string): Promise<List | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    const userId = await this.getUserId();
+    if (!userId) return null;
 
-    const { data, error } = await supabase.from('lists').insert({ user_id: user.id, name, description }).select().single();
+    const { data, error } = await supabase.from('lists').insert({ user_id: userId, name, description }).select().single();
     if (error) return null;
     return this.mapRowToList(data);
   }
